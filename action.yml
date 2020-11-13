@@ -1,4 +1,4 @@
-name: Set up Visual Studio shell
+name: Visual Studio shell
 description: Set up Visual Studio paths and environment variables
 inputs:
   arch:

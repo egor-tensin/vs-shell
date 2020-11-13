@@ -1,5 +1,5 @@
-Set up Visual Studio shell
-==========================
+Visual Studio shell
+===================
 
 This is a GitHub action that sets up a Visual Studio shell in your workflow
 run.
