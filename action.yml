@@ -1,0 +1,119 @@
+name: Set up Visual Studio shell
+description: Set up Visual Studio paths and environment variables
+inputs:
+  arch:
+    description: 'Target architecture'
+    required: false
+    default: 'x64'
+runs:
+  using: composite
+  steps:
+    - run: |
+        function Locate-VSWhere {
+            $path = Get-Command 'vswhere' -ErrorAction SilentlyContinue
+            if ($path) {
+                $path.Path
+            } else {
+                Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio' 'Installer' 'vswhere'
+            }
+        }
+
+        function Locate-VS {
+            # vswhere doesn't search for Build Tools by default, God knows why.
+            # https://github.com/microsoft/vswhere/issues/22
+            $products = 'Community','Professional','Enterprise','BuildTools' | %{ "Microsoft.VisualStudio.Product.$_" }
+            $vswhere = Locate-VSWhere
+            & $vswhere -products $products -latest -format json | ConvertFrom-Json
+        }
+
+        function Import-PS {
+            # VS 2019 includes Microsoft.VisualStudio.DevShell.dll, which does
+            # what we want.
+            #
+            # It also includes Launch-VsDevShell.ps1, which sort of does the
+            # same thing this function does, but it always sets up 32-bit
+            # shell, which is stupid.  I use the same workaround as in
+            # https://developercommunity.visualstudio.com/idea/943058/x64-developer-powershell-for-vs-2019.html
+
+            param(
+                [Parameter(Mandatory=$true)]
+                [object] $info
+            )
+
+            $tools_path = Join-Path $info.installationPath 'Common7' 'Tools'
+            $module_name = 'Microsoft.VisualStudio.DevShell.dll'
+            $module_path = Join-Path $tools_path $module_name
+
+            if (!(Test-Path $module_path -Type Leaf)) {
+                $module_path = Join-Path $tools_path 'vsdevshell' $module_name
+            }
+
+            if (!(Test-Path $module_path -Type Leaf)) {
+                throw "Couldn't find module '$module_name'"
+            }
+
+            Import-Module $module_path
+            Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments '-arch=${{ inputs.arch }} -no_logo'
+        }
+
+        function Import-CMD {
+            # For Visual Studio 2017, there's no Microsoft.VisualStudio.DevShell.dll,
+            # so we have to work around that.  One workaround I found here:
+            # https://github.com/microsoft/vswhere/issues/150
+
+            param(
+                [Parameter(Mandatory=$true)]
+                [object] $info
+            )
+
+            $tools_path = Join-Path $info.installationPath 'Common7' 'Tools'
+            $script_name = 'VsDevCmd.bat'
+            $script_path = Join-Path $tools_path $script_name
+
+            if (!(Test-Path $script_path -Type Leaf)) {
+                throw "Couldn't find script '$script_name'"
+            }
+
+            $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=${{ inputs.arch }} -no_logo && pwsh -Command `"Get-ChildItem env: | ConvertTo-Json`"")
+            if ($LASTEXITCODE -ne 0) {
+                throw $json
+            } else {
+                $json | ConvertFrom-Json | %{
+                    $k, $v = $_.Key, $_.Value
+                    Set-Content "env:$k" "$v"
+                }
+            }
+        }
+
+        $old_values = @{}
+        Get-ChildItem env: | %{ $old_values.Add($_.Name, $_.Value) }
+
+        $info = Locate-VS
+        try {
+            Import-PS $info
+        } catch {
+            echo $_
+            Import-CMD $info
+        }
+
+        $new_values = @{}
+        Get-ChildItem env: | %{ $new_values.Add($_.Name, $_.Value) }
+
+        # Some diagnostics as to which exact variables were modified follows:
+        echo '----------------------------------------------------------------'
+        echo 'New variables'
+        echo '----------------------------------------------------------------'
+        $new_values.GetEnumerator() | where { -not $old_values.ContainsKey($_.Name) } | Format-List
+
+        echo '----------------------------------------------------------------'
+        echo 'Modified variables'
+        echo '----------------------------------------------------------------'
+        $new_values.GetEnumerator() | where { $old_values.ContainsKey($_.Name) -and $old_values[$_.Name] -ne $_.Value } | Format-List
+
+
+        # Update the current environment:
+        Get-ChildItem env: | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
+      shell: pwsh
+branding:
+  icon: star
+  color: green

@@ -1,0 +1,54 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly, at 5:45 AM on Friday (somewhat randomly chosen).
+    - cron: '45 6 * * 5'
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-2019', 'windows-2016']
+        arch: ['x86', 'x64']
+
+        include:
+          # Prettier run names.
+          - os: windows-2019
+            name: VS 2019
+          - os: windows-2016
+            name: VS 2017
+
+    runs-on: '${{ matrix.os }}'
+
+    name: '${{ matrix.name }} / ${{ matrix.arch }}'
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: cl.exe shouldn't be found
+        run: |
+          $(Get-Command cl -ErrorAction SilentlyContinue) -and $(throw "cl.exe was found!")
+
+      - name: Set up Visual Studio shell
+        uses: ./
+        with:
+          arch: '${{ matrix.arch }}'
+
+      - name: cl.exe should be found now
+        run: |
+          $(Get-Command cl -ErrorAction SilentlyContinue) -or $(throw "cl.exe wasn't found!")
+
+      - name: Build foo.exe
+        run: |
+          cl.exe /EHsc foo.cpp
+          ./foo.exe
