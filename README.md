@@ -1,6 +1,8 @@
 Visual Studio shell
 ===================
 
+![Test](https://github.com/egor-tensin/vs-shell/workflows/Test/badge.svg)
+
 This is a GitHub action that sets up a Visual Studio shell in your workflow
 run.
 This is similar to running one of the vcvars*.bat scripts or launching one of
