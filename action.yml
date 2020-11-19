@@ -1,10 +1,12 @@
 name: Visual Studio shell
 description: Set up Visual Studio paths and environment variables
+
 inputs:
   arch:
-    description: 'Target architecture'
+    description: Target architecture
     required: false
-    default: 'x64'
+    default: x64
+
 runs:
   using: composite
   steps:
@@ -117,6 +119,7 @@ runs:
             Get-ChildItem env: | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
         }
       shell: pwsh
+
 branding:
   icon: star
   color: green

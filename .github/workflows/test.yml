@@ -13,15 +13,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['windows-2019', 'windows-2016']
-        arch: ['x86', 'x64']
+        os: [windows-2019, windows-2016]
+        arch: [x86, x64]
 
         include:
           # Prettier run names.
-          - os: windows-2019
-            name: VS 2019
-          - os: windows-2016
-            name: VS 2017
+          - {os: windows-2019, name: VS 2019}
+          - {os: windows-2016, name: VS 2017}
 
     runs-on: '${{ matrix.os }}'
 
@@ -51,4 +49,4 @@ jobs:
       - name: Build foo.exe
         run: |
           cl.exe /EHsc foo.cpp
-          ./foo.exe
+          .\foo.exe
