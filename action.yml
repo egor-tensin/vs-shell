@@ -76,13 +76,16 @@ runs:
                 throw "Couldn't find script '$script_name'"
             }
 
-            $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=${{ inputs.arch }} -no_logo && pwsh -Command `"Get-ChildItem env: | ConvertTo-Json`"")
+            $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=${{ inputs.arch }} -no_logo && pwsh -Command `"Get-ChildItem env: | Select-Object Name,Value | ConvertTo-Json`"")
             if ($LASTEXITCODE -ne 0) {
                 throw $json
             } else {
-                $json | ConvertFrom-Json | %{
-                    $k, $v = $_.Key, $_.Value
-                    Set-Content "env:$k" "$v"
+                try {
+                    $json | ConvertFrom-Json | %{ Set-Content "env:$($_.Name)" $_.Value }
+                } catch {
+                    echo 'There was a problem with the following JSON:'
+                    echo $json
+                    throw
                 }
             }
         }
