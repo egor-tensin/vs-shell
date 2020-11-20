@@ -10,7 +10,7 @@ the "Command Tools for VS" Start Menu shortcuts, but it's also shell-agnostic.
 Use it in your workflow like this:
 
     - name: Set up Visual Studio shell
-      uses: egor-tensin/vs-shell@v1
+      uses: egor-tensin/vs-shell@v2
       with:
         arch: x64
 
