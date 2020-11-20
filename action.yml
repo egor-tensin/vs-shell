@@ -76,6 +76,32 @@ runs:
                 throw "Couldn't find script '$script_name'"
             }
 
+            # OK, the following issue is royally stupid.  At one point, I
+            # started getting errors like this:
+            #
+            #     Conversion from JSON failed with error: Unexpected character encountered while parsing value: W.
+            #
+            # They appeared out of nowhere, without any changes in the code.
+            # Turns out, ConvertTo-Json is pretty much unusable by default.
+            # See, it has a `-Depth` parameter, which has a default value of 2,
+            # which is insanely low.  I don't know what it does if the input
+            # exceeds the nesting depth of 2, but I do know that starting from
+            # Powershell 7.1, ConvertTo-Json prints a "helpful" warning in this
+            # case.  The warning looks like this:
+            #
+            #     WARNING: Resulting JSON is truncated as serialization has exceeded the set depth of 2.
+            #
+            # Apparently, PowerShell on windows-2016 images got upgraded, hence
+            # the failure to parse the letter W.  I _accidentally_ fixed it by
+            # adding "Select-Object Name,Value" to the pipeline, cutting the
+            # nesting depth, so keeping that part in the pipeline is important.
+            #
+            # See also:
+            #
+            #     * https://github.com/PowerShell/PowerShell/issues/8393
+            #     * https://stackoverflow.com/q/53583677/514684
+            #     * https://stackoverflow.com/q/53562942/514684
+
             $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=${{ inputs.arch }} -no_logo && pwsh -Command `"Get-ChildItem env: | Select-Object Name,Value | ConvertTo-Json`"")
             if ($LASTEXITCODE -ne 0) {
                 throw $json
