@@ -1,7 +1,7 @@
 Visual Studio shell
 ===================
 
-[![Test](https://github.com/egor-tensin/vs-shell/workflows/Test/badge.svg)](https://github.com/egor-tensin/vs-shell/actions?query=workflow%3ATest)
+[![Test](https://github.com/egor-tensin/vs-shell/actions/workflows/test.yml/badge.svg)](https://github.com/egor-tensin/vs-shell/actions/workflows/test.yml)
 
 This is a GitHub action that sets up a Visual Studio shell in your workflow
 run.
