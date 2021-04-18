@@ -22,8 +22,8 @@ API
 
 | Input | Value | Default | Description
 | ----- | ----- | ------- | -----------
-| arch  | x64   | Yes     | Build 64-bit executables.
-|       | x86   | No      | Build 32-bit executables.
+| arch  | x64   | ✓       | Build 64-bit executables.
+|       | x86   |         | Build 32-bit executables.
 
 The action passes the environment variables set by one of the vcvars*.bat
 scripts to the calling job.
