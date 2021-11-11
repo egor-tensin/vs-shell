@@ -22,6 +22,11 @@ jobs:
           - {os: windows-2019, name: VS 2019}
           - {os: windows-2022, name: VS 2022}
 
+          # Expected VSCMD_ARG_TGT_ARCH value.
+          - {arch: x86,   expected_arch: x86}
+          - {arch: Win32, expected_arch: x86}
+          - {arch: x64,   expected_arch: x64}
+
     runs-on: '${{ matrix.os }}'
 
     name: '${{ matrix.name }} / ${{ matrix.arch }}'
@@ -53,3 +58,9 @@ jobs:
         run: |
           cl.exe /EHsc foo.cpp
           .\foo.exe
+
+      - name: Verify target architecture
+        run: |
+          $actual = $env:VSCMD_ARG_TGT_ARCH
+          $expected = '${{ matrix.expected_arch }}'
+          $($expected -eq $actual) -or $(throw "Unexpected target architecture: $actual")
