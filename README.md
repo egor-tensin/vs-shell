@@ -16,7 +16,7 @@ Use it in your workflow like this:
         arch: x64
 
 * `x64` is the default value for the `arch` parameter and can be omitted.
-Use `x86` if you want to build 32-bit binaries.
+Use `x86` (or `Win32`) if you want to build 32-bit binaries.
 
 API
 ---
@@ -25,6 +25,7 @@ API
 | ----- | ----- | ------- | -----------
 | arch  | x64   | ✓       | Build 64-bit executables.
 |       | x86   |         | Build 32-bit executables.
+|       | Win32 |         | Build 32-bit executables.
 
 The action passes the environment variables set by one of the vcvars*.bat
 scripts to the calling job.
