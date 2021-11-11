@@ -57,12 +57,12 @@ runs:
 
             param(
                 [Parameter(Mandatory=$true)]
-                [object] $info,
+                [object] $Info,
                 [Parameter(Mandatory=$true)]
                 [string] $Arch
             )
 
-            $tools_path = Join-Path $info.installationPath 'Common7' 'Tools'
+            $tools_path = Join-Path $Info.installationPath 'Common7' 'Tools'
             $module_name = 'Microsoft.VisualStudio.DevShell.dll'
             $module_path = Join-Path $tools_path $module_name
 
@@ -75,7 +75,7 @@ runs:
             }
 
             Import-Module $module_path
-            Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=$Arch -no_logo"
+            Enter-VsDevShell -VsInstanceId $Info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=$Arch -no_logo"
         }
 
         function Import-CMD {
@@ -85,12 +85,12 @@ runs:
 
             param(
                 [Parameter(Mandatory=$true)]
-                [object] $info,
+                [object] $Info,
                 [Parameter(Mandatory=$true)]
                 [string] $Arch
             )
 
-            $tools_path = Join-Path $info.installationPath 'Common7' 'Tools'
+            $tools_path = Join-Path $Info.installationPath 'Common7' 'Tools'
             $script_name = 'VsDevCmd.bat'
             $script_path = Join-Path $tools_path $script_name
 
