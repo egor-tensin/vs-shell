@@ -46,6 +46,8 @@ jobs:
       - name: cl.exe should be found now
         run: |
           $(Get-Command cl -ErrorAction SilentlyContinue) -or $(throw "cl.exe wasn't found!")
+          echo _MSC_VER > test.c
+          cl /nologo /EP test.c
 
       - name: Build foo.exe
         run: |
