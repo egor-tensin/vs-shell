@@ -13,13 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2016, windows-2019]
+        os: [windows-2016, windows-2019, windows-2022]
         arch: [x86, x64]
 
         include:
           # Prettier run names.
           - {os: windows-2016, name: VS 2017}
           - {os: windows-2019, name: VS 2019}
+          - {os: windows-2022, name: VS 2022}
 
     runs-on: '${{ matrix.os }}'
 
