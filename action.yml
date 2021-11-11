@@ -11,6 +11,24 @@ runs:
   using: composite
   steps:
     - run: |
+        function Normalize-Arch {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $Arch
+            )
+            if ($Arch -eq 'Win32') {
+                # 'Win32' is a common name for x86, and the scripts seem to
+                # only support 'x86'.
+                'x86'
+            } else {
+                # Default to the user-provided value, in case something like
+                # 'ARM' is supported.
+                $arch
+            }
+        }
+
+        New-Variable arch -Value (Normalize-Arch '${{ inputs.arch }}') -Option Constant
+
         function Locate-VSWhere {
             $path = Get-Command 'vswhere' -ErrorAction SilentlyContinue
             if ($path) {
@@ -39,7 +57,9 @@ runs:
 
             param(
                 [Parameter(Mandatory=$true)]
-                [object] $info
+                [object] $info,
+                [Parameter(Mandatory=$true)]
+                [string] $Arch
             )
 
             $tools_path = Join-Path $info.installationPath 'Common7' 'Tools'
@@ -55,7 +75,7 @@ runs:
             }
 
             Import-Module $module_path
-            Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments '-arch=${{ inputs.arch }} -no_logo'
+            Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=$Arch -no_logo"
         }
 
         function Import-CMD {
@@ -65,7 +85,9 @@ runs:
 
             param(
                 [Parameter(Mandatory=$true)]
-                [object] $info
+                [object] $info,
+                [Parameter(Mandatory=$true)]
+                [string] $Arch
             )
 
             $tools_path = Join-Path $info.installationPath 'Common7' 'Tools'
@@ -102,7 +124,7 @@ runs:
             #     * https://stackoverflow.com/q/53583677/514684
             #     * https://stackoverflow.com/q/53562942/514684
 
-            $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=${{ inputs.arch }} -no_logo && pwsh -Command `"Get-ChildItem env: | Select-Object Name,Value | ConvertTo-Json`"")
+            $json = $(& "${env:COMSPEC}" /s /c "`"$script_path`" -arch=$Arch -no_logo && pwsh -Command `"Get-ChildItem env: | Select-Object Name,Value | ConvertTo-Json`"")
             if ($LASTEXITCODE -ne 0) {
                 throw $json
             } else {
@@ -124,10 +146,10 @@ runs:
 
             $info = Locate-VS
             try {
-                Import-PS $info
+                Import-PS $info $arch
             } catch {
                 echo $_
-                Import-CMD $info
+                Import-CMD $info $arch
             }
 
             $new_values = @{}
