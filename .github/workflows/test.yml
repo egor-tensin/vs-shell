@@ -25,6 +25,8 @@ jobs:
           - {arch: Win32, expected_arch: x86}
           - {arch: x64,   expected_arch: x64}
 
+          - {os: windows-11-arm, name: Windows 11 ARM, arch: ARM}
+
     runs-on: '${{ matrix.os }}'
 
     name: '${{ matrix.name }} / ${{ matrix.arch }}'
