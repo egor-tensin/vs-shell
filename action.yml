@@ -20,9 +20,12 @@ runs:
                 # 'Win32' is a common name for x86, and the scripts seem to
                 # only support 'x86'.
                 'x86'
+            } elseif ($Arch -eq 'arm') {
+                # This is just convenience shortcut, I don't think this value
+                # is actually supported.
+                'arm64'
             } else {
-                # Default to the user-provided value, in case something like
-                # 'ARM' is supported.
+                # Default to the user-provided value.
                 $arch
             }
         }

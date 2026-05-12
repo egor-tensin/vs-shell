@@ -38,9 +38,17 @@ jobs:
           - {arch: Win32, expected_arch: x86}
           - {arch: x64,   expected_arch: x64}
 
+          # The ARM images seem to be maintained here:
+          # https://github.com/actions/partner-runner-images/tree/main/images
           - os: windows-11-arm
             name: Windows 11 ARM / VS 2022
             arch: arm64
+            expected_arch: arm64
+            condition: '$version -ge 1930 -and $version -lt 1950'
+
+          - os: windows-11-arm
+            name: Windows 11 ARM / VS 2022
+            arch: arm
             expected_arch: arm64
             condition: '$version -ge 1930 -and $version -lt 1950'
 
