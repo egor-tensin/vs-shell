@@ -50,6 +50,9 @@ jobs:
       - name: cl.exe should be found now
         run: |
           $(Get-Command cl -ErrorAction SilentlyContinue) -or $(throw "cl.exe wasn't found!")
+
+      - name: Check cl.exe version
+        run: |
           echo _MSC_VER > test.c
           cl /nologo /EP test.c
 
