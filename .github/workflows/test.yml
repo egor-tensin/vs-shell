@@ -21,6 +21,12 @@ jobs:
           - {os: windows-2025, name: Windows 2025 / VS 2022}
           - {os: windows-2025-vs2026, name: Windows 2025 / VS 2026}
 
+          # Scripting helpers.
+          # Also, see: https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170
+          - {os: windows-2022, condition: '$version -ge 1930 -and $version -lt 1950'}
+          - {os: windows-2025, condition: '$version -ge 1930 -and $version -lt 1950'}
+          - {os: windows-2025-vs2026, condition: '$version -ge 1950'}
+
           # Expected VSCMD_ARG_TGT_ARCH value.
           - {arch: x86,   expected_arch: x86}
           - {arch: Win32, expected_arch: x86}
@@ -54,7 +60,10 @@ jobs:
       - name: Check cl.exe version
         run: |
           echo _MSC_VER > test.c
-          cl /nologo /EP test.c
+          $version = cl /nologo /EP test.c | Select-Object -Last 1
+          $version = [int]$version
+          echo "Version: $version"
+          (${{ matrix.condition }}) -or $(throw 'Unexpected cl.exe version')
 
       - name: Build foo.exe
         run: |
