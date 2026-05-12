@@ -12,13 +12,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, windows-2025]
+        os: [windows-2022, windows-2025, windows-2025-vs2026]
         arch: [x86, Win32, x64]
 
         include:
           # Prettier run names.
-          - {os: windows-2022, name: Windows 2022}
-          - {os: windows-2025, name: Windows 2025}
+          - {os: windows-2022, name: Windows 2022 / VS 2022}
+          - {os: windows-2025, name: Windows 2025 / VS 2022}
+          - {os: windows-2025-vs2026, name: Windows 2025 / VS 2026}
 
           # Expected VSCMD_ARG_TGT_ARCH value.
           - {arch: x86,   expected_arch: x86}
