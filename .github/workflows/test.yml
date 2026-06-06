@@ -88,10 +88,11 @@ jobs:
           echo "Version: $version"
           (${{ matrix.condition }}) -or $(throw 'Unexpected cl.exe version')
 
-      - name: Build foo.exe
+      - name: Build hello.exe
         run: |
-          cl.exe /EHsc foo.cpp
-          .\foo.exe
+          cd test/
+          cl.exe /EHsc hello.cpp
+          .\hello.exe
 
       - name: Verify target architecture
         run: |
