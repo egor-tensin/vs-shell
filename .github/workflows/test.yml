@@ -98,3 +98,17 @@ jobs:
           $actual = $env:VSCMD_ARG_TGT_ARCH
           $expected = '${{ matrix.expected_arch }}'
           $($expected -eq $actual) -or $(throw "Unexpected target architecture: $actual")
+
+  release:
+    if: github.ref_type == 'tag'
+    name: Release
+    runs-on: ubuntu-latest
+    needs:
+      - test
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Release
+        uses: softprops/action-gh-release@v3
