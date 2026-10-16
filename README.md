@@ -23,11 +23,11 @@ API
 
 | Input | Value | Default | Description
 | ----- | ----- | ------- | -----------
-| arch  | x64   | ✓       | Build 64-bit executables.
-|       | x86   |         | Build 32-bit executables.
-|       | Win32 |         | Build 32-bit executables.
-|       | arm64 |         | Only works on Windows ARM runners.
-|       | arm   |         | Same as `arm64`.
+| arch  | x64   | ✓       | Build 64-bit executables
+|       | x86   |         | Build 32-bit executables
+|       | Win32 |         | Build 32-bit executables
+|       | arm64 |         | Only works on Windows ARM runners
+|       | arm   |         | Same as `arm64`
 
 The action passes the environment variables set by one of the vcvars*.bat
 scripts to the calling job.
