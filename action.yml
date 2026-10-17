@@ -10,7 +10,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
+    - env:
+        ARG_ARCH: ${{ inputs.arch }}
+      run: |
         function Normalize-Arch {
             param(
                 [Parameter(Mandatory=$true)]
@@ -30,7 +32,7 @@ runs:
             }
         }
 
-        New-Variable arch -Value (Normalize-Arch '${{ inputs.arch }}') -Option Constant
+        $arch = Normalize-Arch $env:ARG_ARCH
 
         function Locate-VSWhere {
             $path = Get-Command 'vswhere' -ErrorAction SilentlyContinue

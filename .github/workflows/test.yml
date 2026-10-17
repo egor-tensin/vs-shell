@@ -9,6 +9,8 @@ on:
     - cron: '30 00 * * 5'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   test:
     strategy:
@@ -51,9 +53,9 @@ jobs:
             expected_arch: arm64
             condition: '$version -ge 1950'
 
-    runs-on: '${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
 
-    name: '${{ matrix.name }} / ${{ matrix.arch }}'
+    name: ${{ matrix.name }} / ${{ matrix.arch }}
 
     defaults:
       run:
@@ -62,15 +64,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: cl.exe shouldn't be found
         run: |
           $(Get-Command cl -ErrorAction SilentlyContinue) -and $(throw "cl.exe was found!")
 
       - name: Set up Visual Studio shell
-        uses: ./
+        uses: $/
         with:
-          arch: '${{ matrix.arch }}'
+          arch: ${{ matrix.arch }}
 
       - name: cl.exe should be found now
         run: |
@@ -110,5 +114,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Release
         uses: softprops/action-gh-release@v3
