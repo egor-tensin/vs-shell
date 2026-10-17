@@ -23,7 +23,6 @@ jobs:
           - x86
           - Win32
           - x64
-
         include:
           # Prettier run names.
           - {os: windows-2022, name: Windows 2022 / VS 2022}
@@ -52,15 +51,11 @@ jobs:
             arch: arm
             expected_arch: arm64
             condition: '$version -ge 1950'
-
     runs-on: ${{ matrix.os }}
-
     name: ${{ matrix.name }} / ${{ matrix.arch }}
-
     defaults:
       run:
         shell: pwsh
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
