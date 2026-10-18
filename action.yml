@@ -32,14 +32,14 @@ runs:
             }
         }
 
-        $arch = Normalize-Arch $env:ARG_ARCH
+        $arch = Normalize-Arch (Get-ChildItem env:ARG_ARCH).Value
 
         function Locate-VSWhere {
             $path = Get-Command 'vswhere' -ErrorAction SilentlyContinue
             if ($path) {
                 $path.Path
             } else {
-                Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio' 'Installer' 'vswhere'
+                Join-Path (Get-ChildItem 'env:ProgramFiles(x86)').Value 'Microsoft Visual Studio' 'Installer' 'vswhere'
             }
         }
 
