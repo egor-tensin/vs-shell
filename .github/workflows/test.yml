@@ -94,6 +94,13 @@ jobs:
         run: |
           $(Get-Command cl -ErrorAction SilentlyContinue) -and $(throw "cl.exe was found!")
 
+      - name: Save $PSModulePath
+        id: orig_ps_module_path
+        run: |
+          $value = $env:PSModulePath
+          $value.Split(';') | %{ echo $_ }
+          echo "value=$value" >> $env:GITHUB_OUTPUT
+
       - name: Set up Visual Studio shell
         uses: $/
         with:
@@ -135,12 +142,43 @@ jobs:
           cl.exe /EHsc hello.cpp
           .\hello.exe
 
+  keep_unrelated_vars:
+    runs-on: windows-latest
+    name: Check unrelated variables
+    # https://github.com/egor-tensin/vs-shell/pull/10
+    # The problem was that this action exported all of its new environment
+    # variables, and, being a pwsh action, it messed up with PSModulePath,
+    # among other things. If the calling workflow is PowerShell, it messes up
+    # the PowerShell stuff.
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Save $PSModulePath
+        id: orig_ps_module_path
+        run: |
+          $value = $env:PSModulePath
+          $value.Split(';') | %{ echo $_ }
+          echo "value=$value" >> $env:GITHUB_OUTPUT
+      - name: Set up Visual Studio shell
+        uses: $/
+      - name: Check $PSModulePath
+        env:
+          ORIG_VALUE: ${{ steps.orig_ps_module_path.outputs.value }}
+        run: |
+          $value = $env:PSModulePath
+          $value.Split(';') | %{ echo $_ }
+          if ($value -ne $env:ORIG_VALUE) {
+              throw "%PSModulePath% was changed!"
+          }
+
   release:
     if: github.ref_type == 'tag'
     name: Release
     runs-on: ubuntu-latest
     needs:
       - test
+      - keep_unrelated_vars
     permissions:
       contents: write
     steps:
