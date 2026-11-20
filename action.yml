@@ -160,19 +160,27 @@ runs:
             $new_values = @{}
             Get-ChildItem env: | %{ $new_values.Add($_.Name, $_.Value) }
 
+            $added = @($new_values.GetEnumerator() | where { -not $old_values.ContainsKey($_.Name) })
+            $modified = @($new_values.GetEnumerator() | where { $old_values.ContainsKey($_.Name) -and $old_values[$_.Name] -cne $_.Value })
+
             # Some diagnostics as to which exact variables were modified follows:
             echo '----------------------------------------------------------------'
             echo 'New variables'
             echo '----------------------------------------------------------------'
-            $new_values.GetEnumerator() | where { -not $old_values.ContainsKey($_.Name) } | Format-List
+            $added | Format-List
 
             echo '----------------------------------------------------------------'
             echo 'Modified variables'
             echo '----------------------------------------------------------------'
-            $new_values.GetEnumerator() | where { $old_values.ContainsKey($_.Name) -and $old_values[$_.Name] -ne $_.Value } | Format-List
+            $modified | Format-List
 
-            # Update the current environment:
-            Get-ChildItem env: | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
+            # Update the current environment, but only with what the Visual
+            # Studio scripts have set.  Exporting the whole environment would
+            # also pin variables that belong to this pwsh process.  Most
+            # notably, pwsh puts its own module directories first in
+            # PSModulePath, and Windows PowerShell (`shell: powershell`) steps
+            # would then load PowerShell 7 modules instead of their own.
+            $added + $modified | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
         }
       shell: pwsh
 

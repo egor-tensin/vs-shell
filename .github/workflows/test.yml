@@ -111,6 +111,20 @@ jobs:
           $expected = '${{ matrix.expected_arch }}'
           $($expected -eq $actual) -or $(throw "Unexpected target architecture: $actual")
 
+      # pwsh's own PSModulePath mustn't leak into Windows PowerShell steps:
+      # Microsoft.PowerShell.Archive 1.2.7, bundled with PowerShell 7.6.10,
+      # doesn't work in Windows PowerShell.
+      - name: Windows PowerShell uses its own modules
+        shell: powershell
+        run: |
+          $module = (Get-Command Expand-Archive).Module
+          echo "Expand-Archive: $($module.Version) from $($module.Path)"
+          $pwsh_modules = Join-Path $env:ProgramFiles 'PowerShell'
+          $(-not $module.Path.StartsWith($pwsh_modules, 'OrdinalIgnoreCase')) -or $(throw "Windows PowerShell loaded a PowerShell 7 module")
+          Compress-Archive -Path test/hello.cpp -DestinationPath test.zip
+          Expand-Archive test.zip -DestinationPath unpacked
+          $(Test-Path unpacked/hello.cpp) -or $(throw "Expand-Archive didn't work")
+
   release:
     if: github.ref_type == 'tag'
     name: Release
