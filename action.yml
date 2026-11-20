@@ -190,19 +190,28 @@ runs:
             $new_values = @{}
             Get-ChildItem env: | %{ $new_values.Add($_.Name, $_.Value) }
 
+            $added = $new_values.GetEnumerator() | where {
+                -not $old_values.ContainsKey($_.Name)
+            }
+            $added = $added | Sort-Object -Property Name
+            $modified = $new_values.GetEnumerator() | where {
+                $old_values.ContainsKey($_.Name) -and $old_values[$_.Name] -ne $_.Value
+            }
+            $modified = $modified | Sort-Object -Property Name
+
             # Some diagnostics as to which exact variables were modified follows:
             echo '----------------------------------------------------------------'
             echo 'New variables'
             echo '----------------------------------------------------------------'
-            $new_values.GetEnumerator() | where { -not $old_values.ContainsKey($_.Name) } | Format-List
+            $added | Format-List
 
             echo '----------------------------------------------------------------'
             echo 'Modified variables'
             echo '----------------------------------------------------------------'
-            $new_values.GetEnumerator() | where { $old_values.ContainsKey($_.Name) -and $old_values[$_.Name] -ne $_.Value } | Format-List
+            $modified | Format-List
 
             # Update the current environment:
-            Get-ChildItem env: | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
+            $added + $modified | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
         }
       shell: pwsh
 
