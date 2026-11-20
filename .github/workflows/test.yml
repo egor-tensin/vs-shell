@@ -32,18 +32,29 @@ jobs:
         os:
           - windows-2022
           - windows-2025
+          - windows-11-arm
         arch:
           - x86
           - Win32
           - x64
+          - arm
+          - arm64
         method:
           - auto
           - cmd
           - ps
+        exclude:
+          # The x86 runners don't seem to include ARM cross-compilers, but the
+          # ARM runners do (as of Nov '26).
+          - {os: windows-2022, arch: arm}
+          - {os: windows-2022, arch: arm64}
+          - {os: windows-2025, arch: arm}
+          - {os: windows-2025, arch: arm64}
         include:
           # Prettier run names.
-          - {os: windows-2022, name: Windows 2022 / VS 2022}
-          - {os: windows-2025, name: Windows 2025 / VS 2026}
+          - {os: windows-2022,   name: Windows 2022 / VS 2022}
+          - {os: windows-2025,   name: Windows 2025 / VS 2026}
+          - {os: windows-11-arm, name: Windows 11 ARM / VS 2026}
 
           - {method: auto, method_suffix: ''}
           - {method: cmd,  method_suffix: ' / VsDevCmd.bat'}
@@ -51,31 +62,16 @@ jobs:
 
           # Scripting helpers.
           # Also, see: https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170
-          - {os: windows-2022, condition: '$version -ge 1930 -and $version -lt 1950'}
-          - {os: windows-2025, condition: '$version -ge 1950'}
+          - {os: windows-2022,   condition: '$version -ge 1930 -and $version -lt 1950'}
+          - {os: windows-2025,   condition: '$version -ge 1950'}
+          - {os: windows-11-arm, condition: '$version -ge 1950'}
 
           # Expected VSCMD_ARG_TGT_ARCH value.
           - {arch: x86,   expected_arch: x86}
           - {arch: Win32, expected_arch: x86}
           - {arch: x64,   expected_arch: x64}
-
-          # The ARM images seem to be maintained here:
-          # https://github.com/actions/partner-runner-images/tree/main/images
-          - os: windows-11-arm
-            method: auto
-            method_suffix: ''
-            name: Windows 11 ARM / VS 2026
-            arch: arm64
-            expected_arch: arm64
-            condition: '$version -ge 1950'
-
-          - os: windows-11-arm
-            method: auto
-            method_suffix: ''
-            name: Windows 11 ARM / VS 2026
-            arch: arm
-            expected_arch: arm64
-            condition: '$version -ge 1950'
+          - {arch: arm,   expected_arch: arm64}
+          - {arch: arm64, expected_arch: arm64}
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }} / ${{ matrix.arch }}${{ matrix.method_suffix }}
     defaults:
@@ -99,7 +95,9 @@ jobs:
 
       - name: cl.exe should be found now
         run: |
-          $(Get-Command cl -ErrorAction SilentlyContinue) -or $(throw "cl.exe wasn't found!")
+          $path = Get-Command cl -ErrorAction SilentlyContinue
+          $path -or $(throw "cl.exe wasn't found!")
+          echo $path.Path
 
       - name: cl.exe /? for debugging
         run: cl /?
