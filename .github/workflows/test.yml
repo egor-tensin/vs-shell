@@ -36,10 +36,18 @@ jobs:
           - x86
           - Win32
           - x64
+        method:
+          - auto
+          - cmd
+          - ps
         include:
           # Prettier run names.
           - {os: windows-2022, name: Windows 2022 / VS 2022}
           - {os: windows-2025, name: Windows 2025 / VS 2026}
+
+          - {method: auto, method_suffix: ''}
+          - {method: cmd,  method_suffix: ' / VsDevCmd.bat'}
+          - {method: ps,   method_suffix: ' / DevShell.dll'}
 
           # Scripting helpers.
           # Also, see: https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170
@@ -54,18 +62,22 @@ jobs:
           # The ARM images seem to be maintained here:
           # https://github.com/actions/partner-runner-images/tree/main/images
           - os: windows-11-arm
+            method: auto
+            method_suffix: ''
             name: Windows 11 ARM / VS 2026
             arch: arm64
             expected_arch: arm64
             condition: '$version -ge 1950'
 
           - os: windows-11-arm
+            method: auto
+            method_suffix: ''
             name: Windows 11 ARM / VS 2026
             arch: arm
             expected_arch: arm64
             condition: '$version -ge 1950'
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }} / ${{ matrix.arch }}
+    name: ${{ matrix.name }} / ${{ matrix.arch }}${{ matrix.method_suffix }}
     defaults:
       run:
         shell: pwsh
@@ -83,6 +95,7 @@ jobs:
         uses: $/
         with:
           arch: ${{ matrix.arch }}
+          force_method: ${{ matrix.method }}
 
       - name: cl.exe should be found now
         run: |

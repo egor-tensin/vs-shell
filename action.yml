@@ -6,12 +6,17 @@ inputs:
     description: Target architecture
     required: false
     default: x64
+  force_method:
+    description: Internal use (for testing) only
+    required: false
+    default: auto
 
 runs:
   using: composite
   steps:
     - env:
         ARG_ARCH: ${{ inputs.arch }}
+        ARG_FORCE_METHOD: ${{ inputs.force_method }}
       run: |
         function Normalize-Arch {
             param(
@@ -143,19 +148,44 @@ runs:
             }
         }
 
+        function Do-Setup() {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string] $Arch,
+                [Parameter(Mandatory=$true)]
+                [ValidateSet('auto', 'cmd', 'ps')]
+                [string] $ForceMethod
+            )
+
+            $info = Locate-VS
+            switch ($ForceMethod) {
+                'auto' {
+                    try {
+                        Import-PS $info $Arch
+                    } catch {
+                        echo $_
+                        Import-CMD $info $Arch
+                    }
+                }
+                'cmd' {
+                    Import-CMD $info $Arch
+                }
+                'ps' {
+                    Import-PS $info $Arch
+                }
+                default {
+                    throw "Invalid setup method: $ForceMethod"
+                }
+            }
+        }
+
         if ('${{ runner.os }}' -ne 'Windows') {
             echo 'Not going to set up a Visual Studio shell on ${{ runner.os }}'
         } else {
             $old_values = @{}
             Get-ChildItem env: | %{ $old_values.Add($_.Name, $_.Value) }
 
-            $info = Locate-VS
-            try {
-                Import-PS $info $arch
-            } catch {
-                echo $_
-                Import-CMD $info $arch
-            }
+            Do-Setup $arch (Get-ChildItem env:ARG_FORCE_METHOD).Value
 
             $new_values = @{}
             Get-ChildItem env: | %{ $new_values.Add($_.Name, $_.Value) }
