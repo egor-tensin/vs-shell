@@ -66,12 +66,19 @@ jobs:
           - {os: windows-2025,   condition: '$version -ge 1950'}
           - {os: windows-11-arm, condition: '$version -ge 1950'}
 
+          # Expected in the output of cl /?
+          - {arch: x86,   cl_arch: x86}
+          - {arch: Win32, cl_arch: x86}
+          - {arch: x64,   cl_arch: x64}
+          - {arch: arm,   cl_arch: ARM64}
+          - {arch: arm64, cl_arch: ARM64}
+
           # Expected VSCMD_ARG_TGT_ARCH value.
-          - {arch: x86,   expected_arch: x86}
-          - {arch: Win32, expected_arch: x86}
-          - {arch: x64,   expected_arch: x64}
-          - {arch: arm,   expected_arch: arm64}
-          - {arch: arm64, expected_arch: arm64}
+          - {arch: x86,   vscmd_arch: x86}
+          - {arch: Win32, vscmd_arch: x86}
+          - {arch: x64,   vscmd_arch: x64}
+          - {arch: arm,   vscmd_arch: arm64}
+          - {arch: arm64, vscmd_arch: arm64}
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }} / ${{ matrix.arch }}${{ matrix.method_suffix }}
     defaults:
@@ -99,8 +106,20 @@ jobs:
           $path -or $(throw "cl.exe wasn't found!")
           echo $path.Path
 
-      - name: cl.exe /? for debugging
-        run: cl /?
+      - name: Check cl.exe /?
+        run: |
+          $output = cl /? 2>&1 | % ToString | Select -First 2
+          echo $output
+          if (!$output[0].EndsWith(' for ${{ matrix.cl_arch }}')) {
+              throw "Unexpected target architecture"
+          }
+
+      - name: Verify environment variables
+        run: |
+          $actual = $env:VSCMD_ARG_TGT_ARCH
+          if ($actual -ne '${{ matrix.vscmd_arch }}') {
+              throw "Unexpected target architecture: $actual"
+          }
 
       - name: Check cl.exe version
         run: |
@@ -115,12 +134,6 @@ jobs:
           cd test/
           cl.exe /EHsc hello.cpp
           .\hello.exe
-
-      - name: Verify target architecture
-        run: |
-          $actual = $env:VSCMD_ARG_TGT_ARCH
-          $expected = '${{ matrix.expected_arch }}'
-          $($expected -eq $actual) -or $(throw "Unexpected target architecture: $actual")
 
   release:
     if: github.ref_type == 'tag'
